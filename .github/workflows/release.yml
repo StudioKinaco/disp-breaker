@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build (arm64)
+        run: |
+          chmod +x mac/build.sh
+          BUILD_ARCH="arm64" mac/build.sh
+
+      - name: Package
+        run: |
+          cd build/mac
+          # Use ditto to preserve the macOS bundle structure & extended attrs.
+          ditto -c -k --keepParent "STUDIO KINACO.plugin" "../../DispBreaker-mac-${{ github.ref_name }}.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-build
+          path: DispBreaker-mac-*.zip
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows (x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build
+        shell: cmd
+        run: msbuild win\DispBreaker.sln /p:Configuration=Release /p:Platform=x64 /m
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "build/win-package/STUDIO KINACO" | Out-Null
+          Copy-Item "build/win/x64/Disp Breaker.aex" -Destination "build/win-package/STUDIO KINACO/"
+          Compress-Archive -Path "build/win-package/STUDIO KINACO" -DestinationPath "DispBreaker-win-${{ github.ref_name }}.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-build
+          path: DispBreaker-win-*.zip
+          if-no-files-found: error
+
+  release:
+    name: Create Release
+    needs: [build-mac, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download mac artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mac-build
+          path: dist
+
+      - name: Download windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: win-build
+          path: dist
+
+      - name: List artifacts
+        run: ls -la dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
+          body: |
+            ## STUDIO KINACO — Disp Breaker ${{ github.ref_name }}
+
+            ### Downloads
+            - **macOS (Apple Silicon)**: `DispBreaker-mac-${{ github.ref_name }}.zip` → 展開して `STUDIO KINACO.plugin` を `/Applications/Adobe After Effects 2026/Plug-ins/` に配置
+            - **Windows (x64)**: `DispBreaker-win-${{ github.ref_name }}.zip` → 展開して `STUDIO KINACO` フォルダごと `C:\Program Files\Adobe\Adobe After Effects 2026\Support Files\Plug-ins\` に配置
+
+            詳細は同梱の README を参照してください。

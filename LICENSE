@@ -1,0 +1,10 @@
+Copyright (c) 2026 STUDIO KINACO
+
+All rights reserved.
+
+This software is proprietary. Redistribution of source code is not permitted
+without explicit written permission. Binary releases may be freely shared.
+
+The vendored Adobe After Effects SDK (under sdk/) is the property of Adobe Inc.
+and is governed by Adobe's separate license terms — see the original SDK
+distribution for details.

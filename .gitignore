@@ -1,0 +1,38 @@
+# Build output
+build/
+dist/
+
+# Windows / MSBuild
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM64/
+*.user
+*.suo
+*.aps
+*.pch
+*.ilk
+*.pdb
+*.idb
+*.tlog
+*.log
+*.tmp
+*.tlb
+*.rc
+*.rrc
+*.rr
+*.obj
+*.lib
+*.exp
+*.exe.config
+.vs/
+
+# macOS
+.DS_Store
+*.dSYM/
+
+# Editor
+.vscode/
+.idea/
+*.swp

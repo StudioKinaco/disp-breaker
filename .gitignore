@@ -1,6 +1,6 @@
 # Build output
 build/
-dist/
+artifacts/
 
 # Windows / MSBuild
 [Dd]ebug/
